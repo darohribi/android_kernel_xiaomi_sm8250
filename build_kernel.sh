@@ -263,9 +263,25 @@ build_target() {
     echo "[*] Updating config (make olddefconfig)..."
     make "${MAKE_OPTS[@]}" olddefconfig
 
-    # ----------------------------------------------------
-    # Compilation
-    # ----------------------------------------------------
+    # Re-inject critical optimization options that olddefconfig may strip
+    echo "[*] Re-injecting critical optimization options..."
+    scripts/config --file "${OUT_DIR}/.config" -e TCP_CONG_BBR
+    scripts/config --file "${OUT_DIR}/.config" -e TCP_CONG_VEGAS
+    scripts/config --file "${OUT_DIR}/.config" -e IP_NF_TARGET_TTL
+    scripts/config --file "${OUT_DIR}/.config" -e DYNAMIC_FSYNC
+    scripts/config --file "${OUT_DIR}/.config" -e IOSCHED_ANXIETY
+    scripts/config --file "${OUT_DIR}/.config" -e DEFAULT_ANXIETY
+    scripts/config --file "${OUT_DIR}/.config" -e CFG80211_DEFAULT_PS
+    scripts/config --file "${OUT_DIR}/.config" -e LTO_CLANG
+    scripts/config --file "${OUT_DIR}/.config" -e CFI_CLANG
+    scripts/config --file "${OUT_DIR}/.config" -e SIMPLE_LMK
+    # Hard assertion: LTO_CLANG must be set after all config adjustments
+    if ! grep -q "^CONFIG_LTO_CLANG=y" "${OUT_DIR}/.config"; then
+        echo "FATAL: CONFIG_LTO_CLANG=y not found in .config after re-injection. Aborting."
+        echo "Current LTO state:"
+        grep -E "^(CONFIG_LTO_CLANG|CONFIG_LTO_NONE|CONFIG_CC_IS_CLANG|CONFIG_LD_IS_LLD)=" "${OUT_DIR}/.config" || true
+        exit 1
+    fi
     echo "[*] Building kernel..."
     make "${MAKE_OPTS[@]}" 
 
