@@ -275,9 +275,12 @@ build_target() {
     scripts/config --file "${OUT_DIR}/.config" -e LTO_CLANG
     scripts/config --file "${OUT_DIR}/.config" -e CFI_CLANG
     scripts/config --file "${OUT_DIR}/.config" -e SIMPLE_LMK
+    # Re-run olddefconfig to properly resolve kconfig choices after re-injection
+    echo "[*] Running olddefconfig to resolve LTO choice..."
+    make "${MAKE_OPTS[@]}" olddefconfig
     # Hard assertion: LTO_CLANG must be set after all config adjustments
     if ! grep -q "^CONFIG_LTO_CLANG=y" "${OUT_DIR}/.config"; then
-        echo "FATAL: CONFIG_LTO_CLANG=y not found in .config after re-injection. Aborting."
+        echo "FATAL: CONFIG_LTO_CLANG=y not found in .config after re-injection and olddefconfig. Aborting."
         echo "Current LTO state:"
         grep -E "^(CONFIG_LTO_CLANG|CONFIG_LTO_NONE|CONFIG_CC_IS_CLANG|CONFIG_LD_IS_LLD)=" "${OUT_DIR}/.config" || true
         exit 1
