@@ -239,4 +239,3 @@ source "drivers/mihw/Kconfig"
 
 source "drivers/rekernel/Kconfig"
 endmenu
-source "drivers/kernelsu/Kconfig"
