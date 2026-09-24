@@ -278,7 +278,9 @@ build_target() {
     # Re-run olddefconfig to properly resolve kconfig choices after re-injection
     echo "[*] Running olddefconfig to resolve LTO choice..."
     make "${MAKE_OPTS[@]}" olddefconfig
-    # Hard assertion: LTO_CLANG must be set after all config adjustments
+    # Disable THINLTO — it conflicts with full LTO path
+    scripts/config --file "${OUT_DIR}/.config" -d THINLTO
+    # Hard assertion: LTO_CLANG must be set and THINLTO must be unset
     if ! grep -q "^CONFIG_LTO_CLANG=y" "${OUT_DIR}/.config"; then
         echo "FATAL: CONFIG_LTO_CLANG=y not found in .config after re-injection and olddefconfig. Aborting."
         echo "Current LTO state:"
